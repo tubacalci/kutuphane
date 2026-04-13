@@ -63,8 +63,8 @@ export default function LibraryPage() {
       console.log("[Library] Query result:", { count: data?.length ?? 0, error });
       if (error) throw error;
 
-      const mapped: LibraryBook[] = (data ?? []).flatMap((item) => {
-        const related = Array.isArray(item.books) ? item.books[0] : item.books;
+      const mapped: LibraryBook[] = (data ?? []).flatMap((item: any) => { // item'a :any ekledik
+       const related = Array.isArray(item.books) ? item.books[0] : item.books;
         if (!related) return [];
 
         return [
