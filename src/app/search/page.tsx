@@ -32,10 +32,7 @@ export default function SearchPage() {
     new Set()
   );
 
-  const scannerRef = useRef<{
-    stop: () => Promise<void>;
-    clear: () => Promise<void>;
-  } | null>(null);
+  const scannerRef = useRef<any>(null);
 
   const topResults = useMemo(() => books.slice(0, 5), [books]);
 
