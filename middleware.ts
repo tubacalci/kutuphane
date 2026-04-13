@@ -11,8 +11,11 @@ export async function middleware(request: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
+  // 1. KRİTİK KONTROL: Eğer değişkenler eksikse hata verip login'e atma, 
+  // en azından sayfayı açmaya çalış ki ne olduğunu anlayalım.
   if (!supabaseUrl || !supabaseAnonKey) {
-    return NextResponse.redirect(new URL("/sign-in", request.url));
+    console.error("Supabase environment variables are missing!");
+    return response; 
   }
 
   const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
@@ -21,17 +24,17 @@ export async function middleware(request: NextRequest) {
         return request.cookies.getAll();
       },
       setAll(cookiesToSet) {
-        for (const cookie of cookiesToSet) {
-          request.cookies.set(cookie.name, cookie.value);
-        }
+        cookiesToSet.forEach(({ name, value, options }) =>
+          request.cookies.set(name, value)
+        );
         response = NextResponse.next({
           request: {
             headers: request.headers,
           },
         });
-        for (const cookie of cookiesToSet) {
-          response.cookies.set(cookie.name, cookie.value, cookie.options);
-        }
+        cookiesToSet.forEach(({ name, value, options }) =>
+          response.cookies.set(name, value, options)
+        );
       },
     },
   });
@@ -40,7 +43,8 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
+  // 2. YÖNLENDİRME KONTROLÜ: Sadece user yoksa ve /sign-in sayfasında değilsek yönlendir.
+  if (!user && !request.nextUrl.pathname.startsWith('/sign-in')) {
     return NextResponse.redirect(new URL("/sign-in", request.url));
   }
 
